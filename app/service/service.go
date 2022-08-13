@@ -4,6 +4,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"net/http"
 	"taoyuan_carpark/cronjob"
@@ -23,6 +24,7 @@ func Init(c *gin.Engine) {
 	v1 := c.Group(routePrefix)
 	{
 		v1.GET("/healthy", func(context *gin.Context) {
+			panic("test")
 			context.JSON(http.StatusOK, gin.H{
 				"status": "ok",
 			})
@@ -45,6 +47,12 @@ func settingConfig() {
 	viper.SetConfigType("yml")
 	viper.AddConfigPath("./config")
 
+	defer func() {
+		if err := recover(); err != nil {
+			log.Error().Msg(err.(string))
+		}
+	}()
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic("viper read config error：" + err.Error())
@@ -54,6 +62,9 @@ func settingConfig() {
 func NewGin() *gin.Engine {
 	app := gin.New()
 	app.Use(cors.Default())
+
+	// custom recovery
+	app.Use(Recovery())
 
 	return app
 }
