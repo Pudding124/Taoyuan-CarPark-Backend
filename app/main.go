@@ -2,16 +2,18 @@ package main
 
 import (
 	"context"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"taoyuan_carpark/logging"
 	"taoyuan_carpark/service"
 	"time"
 )
 
-const defaultPort = ":3000"
+const defaultPort = ":8080"
 
 func main() {
 	app := service.NewGin()
@@ -26,7 +28,7 @@ func main() {
 	go func() {
 		// service connections
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Error().Msg("Server Fail")
+			logging.Print(zerolog.InfoLevel, "", "Server Fail")
 		}
 	}()
 

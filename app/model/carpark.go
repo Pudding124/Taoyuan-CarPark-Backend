@@ -32,3 +32,12 @@ type CarPark struct {
 	WgsX         float64
 	WgsY         float64
 }
+
+type CarParkHistory struct {
+	HashKey      string
+	ParkId       string
+	Week         int
+	Hour         int
+	TotalSpace   int
+	SurplusSpace string
+}

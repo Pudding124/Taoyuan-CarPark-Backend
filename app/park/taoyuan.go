@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 	"io"
 	"net/http"
+	"strconv"
 	"taoyuan_carpark/db"
+	"taoyuan_carpark/logging"
 	"taoyuan_carpark/model"
 )
 
@@ -34,12 +36,42 @@ func UpdateCarPark() {
 	for _, record := range data.Result.Records {
 		db.UpdatePostgres(record)
 	}
-	log.Info("Success")
+	logging.Print(zerolog.InfoLevel, "", "Update Real Time Success")
+}
 
+func UpdateHistoryCarPark() {
+	resp, err := http.Get(taoyuan_url)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+
+	data := model.TaoyuanData{}
+	bodyBytes, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	error2 := json.Unmarshal([]byte(bodyBytes), &data)
+	if error2 != nil {
+		fmt.Println(err)
+	}
+
+	for _, record := range data.Result.Records {
+		db.UpdateHistoryPostgres(record)
+	}
+	logging.Print(zerolog.InfoLevel, "", "Update History Success")
 }
 
 func Find(c *gin.Context) []model.CarPark {
 	query := c.Request.URL.Query()
 	place := query["place"]
 	return db.FindPostgres(place[0])
+}
+
+func FindHistory(c *gin.Context) []model.CarParkHistory {
+	query := c.Request.URL.Query()
+	parkId := query["parkId"]
+	hour, _ := strconv.Atoi(query["hour"][0])
+	return db.FindHistoryPostgres(parkId[0], hour)
 }

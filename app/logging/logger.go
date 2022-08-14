@@ -8,15 +8,13 @@ import (
 
 type ApplicationLog struct {
 	RequestId string `json:"requestId" structs:"requestId"`
-	Service   string `json:"service" structs:"service"`
 	Message   string `json:"message" structs:"message"`
 }
 
-func Print(level zerolog.Level, requestId string, service string, msg string) {
+func Print(level zerolog.Level, requestId string, msg string) {
 
 	applog := ApplicationLog{
 		RequestId: requestId,
-		Service:   service,
 		Message:   msg,
 	}
 
