@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,29 +25,31 @@ func main() {
 		Handler: app,
 	}
 
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 5 seconds.
+	quit := make(chan os.Signal, 1)
+
 	go func() {
 		// service connections
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logging.Print(zerolog.InfoLevel, "", "Server Fail")
+			quit <- syscall.SIGINT
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 5 seconds.
-	quit := make(chan os.Signal, 1)
 	// kill (no param) default send syscall.SIGTERM
 	// kill -2 is syscall.SIGINT
 	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Info().Msg("Shutdown Server ...")
+	logging.Print(zerolog.InfoLevel, "", "Shutdown Server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Info().Msgf("Server Shutdown: %s", err)
+		errMsg := fmt.Sprintf("Server Shutdown: %s", err)
+		logging.Print(zerolog.ErrorLevel, "", errMsg)
 	}
 
-	log.Info().Msg("Server exiting")
-
+	logging.Print(zerolog.InfoLevel, "", "Server exiting")
 }
