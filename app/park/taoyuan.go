@@ -17,26 +17,31 @@ const taoyuan_url = "http://data.tycg.gov.tw/api/v1/rest/datastore/0daad6e6-0632
 
 func UpdateCarPark() {
 	resp, err := http.Get(taoyuan_url)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer resp.Body.Close()
-
-	data := model.TaoyuanData{}
-	bodyBytes, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		fmt.Println(err)
 	}
-	error2 := json.Unmarshal([]byte(bodyBytes), &data)
-	if error2 != nil {
-		fmt.Println(err)
-	}
+	if resp != nil {
+		defer resp.Body.Close()
 
-	for _, record := range data.Result.Records {
-		db.UpdatePostgres(record)
+		data := model.TaoyuanData{}
+		bodyBytes, err := io.ReadAll(resp.Body)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+		error2 := json.Unmarshal([]byte(bodyBytes), &data)
+		if error2 != nil {
+			fmt.Println(err)
+		}
+
+		for _, record := range data.Result.Records {
+			db.UpdatePostgres(record)
+		}
+		logging.Print(zerolog.InfoLevel, "", "Update Real Time Success")
+	} else {
+		logging.Print(zerolog.InfoLevel, "", "Update Real Time Fail")
 	}
-	logging.Print(zerolog.InfoLevel, "", "Update Real Time Success")
 }
 
 func UpdateHistoryCarPark() {
@@ -44,23 +49,28 @@ func UpdateHistoryCarPark() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	defer resp.Body.Close()
+	if resp != nil {
+		defer resp.Body.Close()
 
-	data := model.TaoyuanData{}
-	bodyBytes, err := io.ReadAll(resp.Body)
+		data := model.TaoyuanData{}
+		bodyBytes, err := io.ReadAll(resp.Body)
 
-	if err != nil {
-		fmt.Println(err)
-	}
-	error2 := json.Unmarshal([]byte(bodyBytes), &data)
-	if error2 != nil {
-		fmt.Println(err)
+		if err != nil {
+			fmt.Println(err)
+		}
+		error2 := json.Unmarshal([]byte(bodyBytes), &data)
+		if error2 != nil {
+			fmt.Println(err)
+		}
+
+		for _, record := range data.Result.Records {
+			db.UpdateHistoryPostgres(record)
+		}
+		logging.Print(zerolog.InfoLevel, "", "Update History Success")
+	} else {
+		logging.Print(zerolog.InfoLevel, "", "Update History Fail")
 	}
 
-	for _, record := range data.Result.Records {
-		db.UpdateHistoryPostgres(record)
-	}
-	logging.Print(zerolog.InfoLevel, "", "Update History Success")
 }
 
 func Find(c *gin.Context) []model.CarPark {
